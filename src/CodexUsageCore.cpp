@@ -127,9 +127,9 @@ std::wstring BuildUsageTooltip(const UsageSnapshot& snapshot) {
         return L"Codex Usage error: " + snapshot.errorMessage;
     }
 
-    std::wstring text = L"Codex: 5小时剩余 " + FormatRemainingPercent(snapshot.fiveHour.remainingPercent);
-    text += L"(" + FormatResetAfter(snapshot.fiveHour.resetAfterSeconds) + L"后重置)";
-    text += L" / 本周剩余 " + FormatRemainingPercent(snapshot.weekly.remainingPercent);
-    text += L"(" + FormatResetAfter(snapshot.weekly.resetAfterSeconds) + L"后重置)";
+    std::wstring text = L"Codex: 5\u5c0f\u65f6\u5269\u4f59 " + FormatRemainingPercent(snapshot.fiveHour.remainingPercent);
+    text += L"(" + FormatResetAfter(snapshot.fiveHour.resetAfterSeconds) + L"\u540e\u91cd\u7f6e)";
+    text += L" / \u672c\u5468\u5269\u4f59 " + FormatRemainingPercent(snapshot.weekly.remainingPercent);
+    text += L"(" + FormatResetAfter(snapshot.weekly.resetAfterSeconds) + L"\u540e\u91cd\u7f6e)";
     return text;
 }

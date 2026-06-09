@@ -85,5 +85,9 @@ add_executable(CodexUsageTests
 
 target_link_libraries(CodexUsageTests PRIVATE CodexUsageCore)
 
+if(MSVC)
+    target_compile_options(CodexUsageTests PRIVATE /utf-8)
+endif()
+
 enable_testing()
 add_test(NAME CodexUsageTests COMMAND CodexUsageTests)

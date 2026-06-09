@@ -82,7 +82,10 @@ void BuildsSingleLineSuccessTooltip() {
     const std::wstring tooltip = BuildUsageTooltip(snapshot);
 
     AssertNotContains(tooltip, L'\n', "success tooltip should stay on one line");
-    AssertEqual(tooltip, L"Codex: 5小时剩余 77%(1h 0m后重置) / 本周剩余 39%(1d 0h后重置)", "compact success tooltip");
+    AssertEqual(
+        tooltip,
+        L"Codex: 5\u5c0f\u65f6\u5269\u4f59 77%(1h 0m\u540e\u91cd\u7f6e) / \u672c\u5468\u5269\u4f59 39%(1d 0h\u540e\u91cd\u7f6e)",
+        "compact success tooltip");
 }
 
 void HasGeneratedVersion() {

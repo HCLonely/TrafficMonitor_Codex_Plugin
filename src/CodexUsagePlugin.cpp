@@ -130,8 +130,8 @@ private:
     }
 
     CodexUsageFetcher fetcher_;
-    CodexUsageItem fiveHourItem_{CodexUsageItem::Window::FiveHour, L"Codex 5h Remaining", L"CodexUsage5h", L"5小时: "};
-    CodexUsageItem weeklyItem_{CodexUsageItem::Window::Weekly, L"Codex Weekly Remaining", L"CodexUsageWeek", L"本 周: "};
+    CodexUsageItem fiveHourItem_{CodexUsageItem::Window::FiveHour, L"Codex 5h Remaining", L"CodexUsage5h", L"5\u5c0f\u65f6: "};
+    CodexUsageItem weeklyItem_{CodexUsageItem::Window::Weekly, L"Codex Weekly Remaining", L"CodexUsageWeek", L"\u672c \u5468: "};
     mutable std::mutex mutex_;
     UsageSnapshot snapshot_;
     std::wstring tooltip_ = L"Codex Usage: waiting for data";

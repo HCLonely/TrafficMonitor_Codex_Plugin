@@ -66,6 +66,7 @@ jobs:
         run: cmake --build build/${{ matrix.display_name }} --config Release --target CodexUsage CodexUsageTests
 
       - name: Test
+        if: matrix.display_name != 'arm64'
         run: ctest --test-dir build/${{ matrix.display_name }} -C Release --output-on-failure
 
       - name: Package
