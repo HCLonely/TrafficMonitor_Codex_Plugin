@@ -14,6 +14,18 @@ configure_file(
     @ONLY
 )
 
+set(TRAFFICMONITOR_INCLUDE_DIR "" CACHE PATH "Directory containing TrafficMonitor PluginInterface.h")
+
+if(NOT TRAFFICMONITOR_INCLUDE_DIR)
+    if(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/TrafficMonitor/include/PluginInterface.h")
+        set(TRAFFICMONITOR_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/TrafficMonitor/include")
+    elseif(EXISTS "${CMAKE_CURRENT_SOURCE_DIR}/../TrafficMonitor/include/PluginInterface.h")
+        set(TRAFFICMONITOR_INCLUDE_DIR "${CMAKE_CURRENT_SOURCE_DIR}/../TrafficMonitor/include")
+    else()
+        message(FATAL_ERROR "PluginInterface.h not found. Set TRAFFICMONITOR_INCLUDE_DIR or checkout TrafficMonitor into this source tree.")
+    endif()
+endif()
+
 add_library(CodexUsageCore STATIC
     src/CodexUsageCore.cpp
     src/JsonLite.cpp
@@ -42,7 +54,7 @@ add_library(CodexUsage SHARED
 
 target_include_directories(CodexUsage PRIVATE
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
-    "${CMAKE_CURRENT_SOURCE_DIR}/../TrafficMonitor/include"
+    "${TRAFFICMONITOR_INCLUDE_DIR}"
 )
 
 target_compile_definitions(CodexUsage PRIVATE

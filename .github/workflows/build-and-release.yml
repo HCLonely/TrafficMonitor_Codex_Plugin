@@ -35,6 +35,12 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Checkout TrafficMonitor plugin interface
+        uses: actions/checkout@v4
+        with:
+          repository: zhongyang219/TrafficMonitor
+          path: TrafficMonitor
+
       - name: Resolve version
         id: version
         shell: pwsh
