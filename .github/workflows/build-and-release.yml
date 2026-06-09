@@ -33,10 +33,10 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
       - name: Checkout TrafficMonitor plugin interface
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           repository: zhongyang219/TrafficMonitor
           path: TrafficMonitor
@@ -78,7 +78,7 @@ jobs:
           Compress-Archive -Path "$packageDir\CodexUsage.dll" -DestinationPath "${{ matrix.artifact_name }}.zip" -Force
 
       - name: Upload artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ matrix.artifact_name }}
           path: ${{ matrix.artifact_name }}.zip
@@ -92,7 +92,7 @@ jobs:
 
     steps:
       - name: Download artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v6
         with:
           path: release-assets
           merge-multiple: true

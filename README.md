@@ -35,3 +35,7 @@ ctest --test-dir build --output-on-failure
 
 ![示例1](./example1.png?raw=true)
 ![示例2](./example2.png?raw=true)
+
+## LICENSE
+
+[MIT LICENSE](./LICENSE)
