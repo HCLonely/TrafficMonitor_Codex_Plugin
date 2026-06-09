@@ -118,3 +118,18 @@ std::wstring FormatResetAfter(int seconds) {
     }
     return std::to_wstring(minutes) + L"m";
 }
+
+std::wstring BuildUsageTooltip(const UsageSnapshot& snapshot) {
+    if (!snapshot.success) {
+        if (snapshot.errorMessage.empty()) {
+            return L"Codex Usage: no data";
+        }
+        return L"Codex Usage error: " + snapshot.errorMessage;
+    }
+
+    std::wstring text = L"Codex: 5小时剩余 " + FormatRemainingPercent(snapshot.fiveHour.remainingPercent);
+    text += L"(" + FormatResetAfter(snapshot.fiveHour.resetAfterSeconds) + L"后重置)";
+    text += L" / 本周剩余 " + FormatRemainingPercent(snapshot.weekly.remainingPercent);
+    text += L"(" + FormatResetAfter(snapshot.weekly.resetAfterSeconds) + L"后重置)";
+    return text;
+}

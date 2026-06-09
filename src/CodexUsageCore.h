@@ -24,3 +24,4 @@ std::wstring Utf8ToWide(const std::string& input);
 UsageSnapshot ParseUsageJson(const std::string& jsonText, std::wstring* errorMessage);
 std::wstring FormatRemainingPercent(int remainingPercent);
 std::wstring FormatResetAfter(int seconds);
+std::wstring BuildUsageTooltip(const UsageSnapshot& snapshot);
