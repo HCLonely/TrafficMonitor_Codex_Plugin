@@ -30,3 +30,8 @@ ctest --test-dir build --output-on-failure
 ## 安装
 
 将生成的 `CodexUsage.dll` 复制到 TrafficMonitor 的 `plugins` 目录，然后重启 TrafficMonitor，并在插件管理或显示项目设置中启用这两个显示项目。
+
+## 示例
+
+![示例1](./example1.png?raw=true)
+![示例2](./example2.png?raw=true)

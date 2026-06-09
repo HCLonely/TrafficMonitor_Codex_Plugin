@@ -1,0 +1,103 @@
+name: Build and Release
+
+on:
+  push:
+    branches:
+      - '**'
+    tags:
+      - 'v*'
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    name: Build ${{ matrix.display_name }}
+    runs-on: windows-latest
+
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - display_name: x86
+            cmake_arch: Win32
+            artifact_name: CodexUsage-x86
+          - display_name: x64
+            cmake_arch: x64
+            artifact_name: CodexUsage-x64
+          - display_name: arm64
+            cmake_arch: ARM64
+            artifact_name: CodexUsage-arm64
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Resolve version
+        id: version
+        shell: pwsh
+        run: |
+          $version = "0.1.0"
+          if ($env:GITHUB_REF_TYPE -eq "tag" -and $env:GITHUB_REF_NAME -like "v*") {
+            $version = $env:GITHUB_REF_NAME.Substring(1)
+          }
+          "version=$version" | Out-File -FilePath $env:GITHUB_OUTPUT -Append
+          "Resolved CodexUsage version: $version"
+
+      - name: Configure
+        run: >
+          cmake
+          -S .
+          -B build/${{ matrix.display_name }}
+          -G "Visual Studio 17 2022"
+          -A ${{ matrix.cmake_arch }}
+          -DCMAKE_BUILD_TYPE=Release
+          "-DCODEX_USAGE_VERSION=${{ steps.version.outputs.version }}"
+
+      - name: Build
+        run: cmake --build build/${{ matrix.display_name }} --config Release --target CodexUsage CodexUsageTests
+
+      - name: Test
+        run: ctest --test-dir build/${{ matrix.display_name }} -C Release --output-on-failure
+
+      - name: Package
+        shell: pwsh
+        run: |
+          $packageDir = Join-Path $env:GITHUB_WORKSPACE "package\${{ matrix.artifact_name }}"
+          New-Item -ItemType Directory -Path $packageDir -Force | Out-Null
+          Copy-Item "build\${{ matrix.display_name }}\Release\CodexUsage.dll" $packageDir
+          Compress-Archive -Path "$packageDir\CodexUsage.dll" -DestinationPath "${{ matrix.artifact_name }}.zip" -Force
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: ${{ matrix.artifact_name }}.zip
+          if-no-files-found: error
+
+  release:
+    name: Publish GitHub Release
+    needs: build
+    runs-on: windows-latest
+    if: github.ref_type == 'tag' && startsWith(github.ref_name, 'v')
+
+    steps:
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: release-assets
+          merge-multiple: true
+
+      - name: Publish release
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create $env:GITHUB_REF_NAME `
+            release-assets\CodexUsage-x86.zip `
+            release-assets\CodexUsage-x64.zip `
+            release-assets\CodexUsage-arm64.zip `
+            --title $env:GITHUB_REF_NAME `
+            --generate-notes

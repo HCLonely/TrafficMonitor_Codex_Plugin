@@ -1,4 +1,5 @@
 #include "CodexUsageFetcher.h"
+#include "CodexUsageVersion.h"
 
 #include "PluginInterface.h"
 
@@ -108,9 +109,9 @@ public:
             case TMI_COPYRIGHT:
                 return L"MIT";
             case TMI_VERSION:
-                return L"0.1.0";
+                return CODEX_USAGE_VERSION_WIDE;
             case TMI_URL:
-                return L"https://chatgpt.com";
+                return L"https://github.com/HCLonely/TrafficMonitor_Codex_Plugin";
             default:
                 return L"";
         }

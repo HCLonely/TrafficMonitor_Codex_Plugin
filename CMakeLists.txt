@@ -1,10 +1,18 @@
 cmake_minimum_required(VERSION 3.21)
 
-project(CodexUsage VERSION 0.1.0 LANGUAGES CXX)
+set(CODEX_USAGE_VERSION "0.1.0" CACHE STRING "CodexUsage plugin version")
+
+project(CodexUsage VERSION "${CODEX_USAGE_VERSION}" LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
+
+configure_file(
+    "${CMAKE_CURRENT_SOURCE_DIR}/src/CodexUsageVersion.h.in"
+    "${CMAKE_CURRENT_BINARY_DIR}/generated/CodexUsageVersion.h"
+    @ONLY
+)
 
 add_library(CodexUsageCore STATIC
     src/CodexUsageCore.cpp
@@ -13,6 +21,7 @@ add_library(CodexUsageCore STATIC
 
 target_include_directories(CodexUsageCore PUBLIC
     "${CMAKE_CURRENT_SOURCE_DIR}/src"
+    "${CMAKE_CURRENT_BINARY_DIR}/generated"
 )
 
 target_compile_definitions(CodexUsageCore PRIVATE
