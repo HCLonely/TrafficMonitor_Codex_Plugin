@@ -91,8 +91,11 @@ jobs:
     if: github.ref_type == 'tag' && startsWith(github.ref_name, 'v')
 
     steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
       - name: Download artifacts
-        uses: actions/download-artifact@v6
+        uses: actions/download-artifact@v8
         with:
           path: release-assets
           merge-multiple: true
@@ -106,5 +109,6 @@ jobs:
             release-assets\CodexUsage-x86.zip `
             release-assets\CodexUsage-x64.zip `
             release-assets\CodexUsage-arm64.zip `
+            --repo $env:GITHUB_REPOSITORY `
             --title $env:GITHUB_REF_NAME `
             --generate-notes
