@@ -84,7 +84,7 @@ void BuildsSingleLineSuccessTooltip() {
     AssertNotContains(tooltip, L'\n', "success tooltip should stay on one line");
     AssertEqual(
         tooltip,
-        L"Codex: 5\u5c0f\u65f6\u5269\u4f59 77%(1h 0m\u540e\u91cd\u7f6e) / \u672c\u5468\u5269\u4f59 39%(1d 0h\u540e\u91cd\u7f6e)",
+        L"Codex: 5\u5c0f\u65f6\u5269\u4f59 77%(1h 0m\u540e\u91cd\u7f6e)\nCodex: \u672c\u5468\u5269\u4f59 39%(1d 0h\u540e\u91cd\u7f6e)",
         "compact success tooltip");
 }
 
