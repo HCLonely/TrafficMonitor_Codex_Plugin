@@ -57,7 +57,7 @@ jobs:
           cmake
           -S .
           -B build/${{ matrix.display_name }}
-          -G "Visual Studio 17 2022"
+          -G "Visual Studio 18 2026"
           -A ${{ matrix.cmake_arch }}
           -DCMAKE_BUILD_TYPE=Release
           "-DCODEX_USAGE_VERSION=${{ steps.version.outputs.version }}"
