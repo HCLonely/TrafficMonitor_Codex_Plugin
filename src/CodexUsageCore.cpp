@@ -128,8 +128,8 @@ std::wstring BuildUsageTooltip(const UsageSnapshot& snapshot) {
     }
 
     std::wstring text = L"Codex: 5\u5c0f\u65f6\u5269\u4f59 " + FormatRemainingPercent(snapshot.fiveHour.remainingPercent);
-    text += L"(" + FormatResetAfter(snapshot.fiveHour.resetAfterSeconds) + L"\u540e\u91cd\u7f6e)";
-    text += L" / \u672c\u5468\u5269\u4f59 " + FormatRemainingPercent(snapshot.weekly.remainingPercent);
-    text += L"(" + FormatResetAfter(snapshot.weekly.resetAfterSeconds) + L"\u540e\u91cd\u7f6e)";
+    text += L" (" + FormatResetAfter(snapshot.fiveHour.resetAfterSeconds) + L"\u540e\u91cd\u7f6e)\n";
+    text += L"Codex: \u672c\u5468\u5269\u4f59 " + FormatRemainingPercent(snapshot.weekly.remainingPercent);
+    text += L" (" + FormatResetAfter(snapshot.weekly.resetAfterSeconds) + L"\u540e\u91cd\u7f6e)";
     return text;
 }
