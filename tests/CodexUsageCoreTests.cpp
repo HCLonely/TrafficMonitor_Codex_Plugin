@@ -65,6 +65,31 @@ void ParsesUsageWindows() {
     AssertEqual(snapshot.planType, L"pro", "plan type");
 }
 
+void ClassifiesPrimaryWindowWithoutSecondaryWindow() {
+    const std::string json = R"json({
+        "rate_limit": {
+            "primary_window": {
+                "used_percent": 4,
+                "limit_window_seconds": 604800,
+                "reset_after_seconds": 580302,
+                "reset_at": 1780980000
+            }
+        }
+    })json";
+
+    std::wstring error;
+    UsageSnapshot snapshot = ParseUsageJson(json, &error);
+
+    AssertTrue(snapshot.success, "snapshot should parse without secondary window");
+    AssertTrue(error.empty(), "missing secondary window should not set an error");
+    AssertEqual(snapshot.fiveHour.remainingPercent, -1, "missing five-hour window should be unavailable");
+    AssertEqual(snapshot.weekly.remainingPercent, 96, "primary weekly remaining percent");
+    AssertEqual(
+        BuildUsageTooltip(snapshot),
+        L"Codex: 5\u5c0f\u65f6\u5269\u4f59 --\nCodex: \u672c\u5468\u5269\u4f59 96% (6d 17h\u540e\u91cd\u7f6e)",
+        "tooltip should mark missing five-hour window unavailable");
+}
+
 void FormatsDisplayText() {
     AssertEqual(FormatRemainingPercent(77), L"77%", "remaining percent text");
     AssertEqual(FormatRemainingPercent(-1), L"--", "negative percent text");
@@ -95,6 +120,7 @@ void HasGeneratedVersion() {
 
 int main() {
     ParsesUsageWindows();
+    ClassifiesPrimaryWindowWithoutSecondaryWindow();
     FormatsDisplayText();
     BuildsMultiLineSuccessTooltip();
     HasGeneratedVersion();

@@ -5,7 +5,7 @@
 
 struct UsageWindow {
     int usedPercent = 0;
-    int remainingPercent = 100;
+    int remainingPercent = -1;
     int windowSeconds = 0;
     int resetAfterSeconds = 0;
     long long resetAtUnixSeconds = 0;

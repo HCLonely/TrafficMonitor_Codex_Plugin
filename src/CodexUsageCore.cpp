@@ -8,6 +8,9 @@
 
 namespace {
 
+constexpr int kFiveHourWindowSeconds = 5 * 60 * 60;
+constexpr int kWeeklyWindowSeconds = 7 * 24 * 60 * 60;
+
 bool ExtractWindow(const jsonlite::Value* windowNode, UsageWindow* output) {
     if (windowNode == nullptr || output == nullptr) {
         return false;
@@ -35,6 +38,18 @@ bool ExtractWindow(const jsonlite::Value* windowNode, UsageWindow* output) {
     output->resetAfterSeconds = std::max(*resetAfter, 0);
     output->resetAtUnixSeconds = static_cast<long long>(*resetAtValue);
     return true;
+}
+
+void AssignWindowByDuration(const UsageWindow& window, UsageSnapshot* snapshot) {
+    if (snapshot == nullptr) {
+        return;
+    }
+
+    if (window.windowSeconds == kFiveHourWindowSeconds) {
+        snapshot->fiveHour = window;
+    } else if (window.windowSeconds == kWeeklyWindowSeconds) {
+        snapshot->weekly = window;
+    }
 }
 
 }  // namespace
@@ -74,11 +89,20 @@ UsageSnapshot ParseUsageJson(const std::string& jsonText, std::wstring* errorMes
     const jsonlite::Value* rateLimit = root->Find("rate_limit");
     const jsonlite::Value* primaryWindow = rateLimit != nullptr ? rateLimit->Find("primary_window") : nullptr;
     const jsonlite::Value* secondaryWindow = rateLimit != nullptr ? rateLimit->Find("secondary_window") : nullptr;
-    if (!ExtractWindow(primaryWindow, &snapshot.fiveHour) || !ExtractWindow(secondaryWindow, &snapshot.weekly)) {
+    UsageWindow primaryUsageWindow;
+    if (!ExtractWindow(primaryWindow, &primaryUsageWindow)) {
         if (errorMessage != nullptr) {
-            *errorMessage = L"usage payload missing rate_limit windows";
+            *errorMessage = L"usage payload missing primary rate_limit window";
         }
         return snapshot;
+    }
+    AssignWindowByDuration(primaryUsageWindow, &snapshot);
+
+    if (secondaryWindow != nullptr) {
+        UsageWindow secondaryUsageWindow;
+        if (ExtractWindow(secondaryWindow, &secondaryUsageWindow)) {
+            AssignWindowByDuration(secondaryUsageWindow, &snapshot);
+        }
     }
 
     if (auto emailString = email != nullptr ? email->AsString() : std::nullopt; emailString.has_value()) {
@@ -127,9 +151,15 @@ std::wstring BuildUsageTooltip(const UsageSnapshot& snapshot) {
         return L"Codex Usage error: " + snapshot.errorMessage;
     }
 
-    std::wstring text = L"Codex: 5\u5c0f\u65f6\u5269\u4f59 " + FormatRemainingPercent(snapshot.fiveHour.remainingPercent);
-    text += L" (" + FormatResetAfter(snapshot.fiveHour.resetAfterSeconds) + L"\u540e\u91cd\u7f6e)\n";
-    text += L"Codex: \u672c\u5468\u5269\u4f59 " + FormatRemainingPercent(snapshot.weekly.remainingPercent);
-    text += L" (" + FormatResetAfter(snapshot.weekly.resetAfterSeconds) + L"\u540e\u91cd\u7f6e)";
+    const auto formatWindow = [](const UsageWindow& window) {
+        const std::wstring remaining = FormatRemainingPercent(window.remainingPercent);
+        if (window.remainingPercent < 0) {
+            return remaining;
+        }
+        return remaining + L" (" + FormatResetAfter(window.resetAfterSeconds) + L"\u540e\u91cd\u7f6e)";
+    };
+
+    std::wstring text = L"Codex: 5\u5c0f\u65f6\u5269\u4f59 " + formatWindow(snapshot.fiveHour);
+    text += L"\nCodex: \u672c\u5468\u5269\u4f59 " + formatWindow(snapshot.weekly);
     return text;
 }
