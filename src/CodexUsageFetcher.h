@@ -1,6 +1,7 @@
 #pragma once
 
 #include "CodexUsageCore.h"
+#include "CodexUsageConfig.h"
 
 #include <optional>
 #include <string>
@@ -8,11 +9,10 @@
 
 class CodexUsageFetcher {
 public:
-    UsageSnapshot Fetch() const;
+    UsageSnapshot Fetch(const CodexUsageConfig& config = {}) const;
 
 private:
-    std::wstring ResolveAuthJsonPath() const;
-    std::optional<std::string> ReadAccessToken(std::wstring* errorMessage) const;
+    std::optional<std::string> ReadAccessToken(const CodexUsageConfig& config, std::wstring* errorMessage) const;
     std::optional<std::string> LoadFileUtf8(const std::wstring& path, std::wstring* errorMessage) const;
-    std::optional<std::string> HttpGetUsageJson(const std::string& accessToken, std::wstring* errorMessage) const;
+    std::optional<std::string> HttpGetUsageJson(const std::string& accessToken, const CodexUsageConfig& config, std::wstring* errorMessage) const;
 };

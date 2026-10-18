@@ -45,7 +45,7 @@ jobs:
         id: version
         shell: pwsh
         run: |
-          $version = "0.1.0"
+          $version = "0.1.4"
           if ($env:GITHUB_REF_TYPE -eq "tag" -and $env:GITHUB_REF_NAME -like "v*") {
             $version = $env:GITHUB_REF_NAME.Substring(1)
           }

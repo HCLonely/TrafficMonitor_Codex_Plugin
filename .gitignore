@@ -1,3 +1,5 @@
 build*/
+CodexUsage.ini
+CodexUsage.ini.tmp
 .history/
 docs/

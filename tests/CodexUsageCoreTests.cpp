@@ -118,7 +118,10 @@ void HasGeneratedVersion() {
 
 }  // namespace
 
+void RunCodexConfigTests();
+
 int main() {
+    RunCodexConfigTests();
     ParsesUsageWindows();
     ClassifiesPrimaryWindowWithoutSecondaryWindow();
     FormatsDisplayText();

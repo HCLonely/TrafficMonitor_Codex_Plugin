@@ -1,8 +1,8 @@
 cmake_minimum_required(VERSION 3.21)
 
-set(CODEX_USAGE_VERSION "0.1.0" CACHE STRING "CodexUsage plugin version")
+set(CODEX_USAGE_VERSION "0.1.4" CACHE STRING "CodexUsage plugin version")
 
-project(CodexUsage VERSION "${CODEX_USAGE_VERSION}" LANGUAGES CXX)
+project(CodexUsage VERSION "${CODEX_USAGE_VERSION}" LANGUAGES CXX RC)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -29,6 +29,7 @@ endif()
 add_library(CodexUsageCore STATIC
     src/CodexUsageCore.cpp
     src/JsonLite.cpp
+    src/CodexUsageConfig.cpp
 )
 
 target_include_directories(CodexUsageCore PUBLIC
@@ -47,9 +48,13 @@ if(MSVC)
     target_compile_options(CodexUsageCore PRIVATE /utf-8)
 endif()
 
+target_link_libraries(CodexUsageCore PUBLIC winhttp)
+
 add_library(CodexUsage SHARED
     src/CodexUsagePlugin.cpp
     src/CodexUsageFetcher.cpp
+    src/CodexUsageOptions.cpp
+    src/CodexUsage.rc
 )
 
 target_include_directories(CodexUsage PRIVATE
@@ -65,11 +70,12 @@ target_compile_definitions(CodexUsage PRIVATE
 )
 
 if(MSVC)
-    target_compile_options(CodexUsage PRIVATE /utf-8)
+    target_compile_options(CodexUsage PRIVATE $<$<COMPILE_LANGUAGE:CXX>:/utf-8>)
 endif()
 
 target_link_libraries(CodexUsage PRIVATE
     CodexUsageCore
+    comdlg32
     shlwapi
     winhttp
 )
@@ -81,9 +87,13 @@ set_target_properties(CodexUsage PROPERTIES
 
 add_executable(CodexUsageTests
     tests/CodexUsageCoreTests.cpp
+    tests/CodexUsageConfigTests.cpp
+    src/CodexUsageFetcher.cpp
 )
 
-target_link_libraries(CodexUsageTests PRIVATE CodexUsageCore)
+target_compile_definitions(CodexUsageTests PRIVATE UNICODE _UNICODE NOMINMAX WIN32_LEAN_AND_MEAN)
+
+target_link_libraries(CodexUsageTests PRIVATE CodexUsageCore ws2_32)
 
 if(MSVC)
     target_compile_options(CodexUsageTests PRIVATE /utf-8)

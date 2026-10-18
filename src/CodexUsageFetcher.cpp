@@ -5,42 +5,23 @@
 #include <Windows.h>
 #include <winhttp.h>
 
-#include <fstream>
-#include <sstream>
-
 namespace {
-
-std::wstring JoinPath(const std::wstring& base, const std::wstring& child) {
-    std::wstring result = base;
-    if (!result.empty() && result.back() != L'\\' && result.back() != L'/') {
-        result.push_back(L'\\');
-    }
-    result += child;
-    return result;
-}
-
-std::optional<std::wstring> ReadEnv(const wchar_t* name) {
-    const DWORD size = GetEnvironmentVariableW(name, nullptr, 0);
-    if (size == 0) {
-        return std::nullopt;
-    }
-
-    std::wstring value(size - 1, L'\0');
-    GetEnvironmentVariableW(name, value.data(), size);
-    return value;
-}
 
 std::optional<std::string> HttpGetJson(const std::wstring& userAgent,
                                        const std::wstring& host,
                                        const std::wstring& path,
                                        const std::vector<std::wstring>& headers,
+                                       const CodexUsageConfig& config,
                                        std::wstring* errorMessage) {
     if (errorMessage != nullptr) {
         errorMessage->clear();
     }
 
-    HINTERNET session = WinHttpOpen(userAgent.c_str(), WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY,
-        WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
+    const DWORD accessType = config.proxyMode == ProxyMode::Manual ? WINHTTP_ACCESS_TYPE_NAMED_PROXY :
+        config.proxyMode == ProxyMode::Direct ? WINHTTP_ACCESS_TYPE_NO_PROXY : WINHTTP_ACCESS_TYPE_AUTOMATIC_PROXY;
+    HINTERNET session = WinHttpOpen(userAgent.c_str(), accessType,
+        config.proxyMode == ProxyMode::Manual ? config.proxyServer.c_str() : WINHTTP_NO_PROXY_NAME,
+        WINHTTP_NO_PROXY_BYPASS, 0);
     if (session == nullptr) {
         if (errorMessage != nullptr) {
             *errorMessage = L"WinHttpOpen failed";
@@ -154,17 +135,22 @@ std::optional<std::string> HttpGetJson(const std::wstring& userAgent,
 
 }  // namespace
 
-UsageSnapshot CodexUsageFetcher::Fetch() const {
+UsageSnapshot CodexUsageFetcher::Fetch(const CodexUsageConfig& input) const {
+    auto config = input;
     UsageSnapshot snapshot;
 
     std::wstring errorMessage;
-    std::optional<std::string> accessToken = ReadAccessToken(&errorMessage);
+    if (!NormalizeCodexConfig(&config, &errorMessage)) {
+        snapshot.errorMessage = errorMessage;
+        return snapshot;
+    }
+    std::optional<std::string> accessToken = ReadAccessToken(config, &errorMessage);
     if (!accessToken.has_value()) {
         snapshot.errorMessage = errorMessage;
         return snapshot;
     }
 
-    std::optional<std::string> usageJson = HttpGetUsageJson(*accessToken, &errorMessage);
+    std::optional<std::string> usageJson = HttpGetUsageJson(*accessToken, config, &errorMessage);
     if (!usageJson.has_value()) {
         snapshot.errorMessage = errorMessage;
         return snapshot;
@@ -177,20 +163,8 @@ UsageSnapshot CodexUsageFetcher::Fetch() const {
     return snapshot;
 }
 
-std::wstring CodexUsageFetcher::ResolveAuthJsonPath() const {
-    if (auto codexHome = ReadEnv(L"CODEX_HOME"); codexHome.has_value() && !codexHome->empty()) {
-        return JoinPath(*codexHome, L"auth.json");
-    }
-
-    if (auto userProfile = ReadEnv(L"USERPROFILE"); userProfile.has_value() && !userProfile->empty()) {
-        return JoinPath(JoinPath(*userProfile, L".codex"), L"auth.json");
-    }
-
-    return L".codex\\auth.json";
-}
-
-std::optional<std::string> CodexUsageFetcher::ReadAccessToken(std::wstring* errorMessage) const {
-    const std::wstring authPath = ResolveAuthJsonPath();
+std::optional<std::string> CodexUsageFetcher::ReadAccessToken(const CodexUsageConfig& config, std::wstring* errorMessage) const {
+    const std::wstring authPath = ResolveCodexAuthPath(config);
     std::optional<std::string> jsonText = LoadFileUtf8(authPath, errorMessage);
     if (!jsonText.has_value()) {
         return std::nullopt;
@@ -250,11 +224,12 @@ std::optional<std::string> CodexUsageFetcher::LoadFileUtf8(const std::wstring& p
     return contents;
 }
 
-std::optional<std::string> CodexUsageFetcher::HttpGetUsageJson(const std::string& accessToken, std::wstring* errorMessage) const {
+std::optional<std::string> CodexUsageFetcher::HttpGetUsageJson(const std::string& accessToken, const CodexUsageConfig& config, std::wstring* errorMessage) const {
     return HttpGetJson(
         L"TrafficMonitorCodexUsage/0.1",
         L"chatgpt.com",
         L"/backend-api/wham/usage",
         { L"Authorization: Bearer " + Utf8ToWide(accessToken) },
+        config,
         errorMessage);
 }

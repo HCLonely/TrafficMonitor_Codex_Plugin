@@ -1,4 +1,5 @@
 #include "CodexUsageFetcher.h"
+#include "CodexUsageOptions.h"
 #include "CodexUsageVersion.h"
 
 #include "PluginInterface.h"
@@ -75,6 +76,8 @@ public:
 
     void DataRequired() override {
         const auto now = std::chrono::steady_clock::now();
+        CodexUsageConfig config;
+        unsigned long long generation;
         {
             std::lock_guard<std::mutex> lock(mutex_);
             if (fetchInProgress_) {
@@ -85,17 +88,41 @@ public:
             }
             fetchInProgress_ = true;
             lastFetch_ = now;
+            config = config_;
+            generation = configGeneration_;
         }
 
-        std::thread([this]() {
-            UsageSnapshot snapshot = fetcher_.Fetch();
+        std::thread([this, config, generation]() {
+            UsageSnapshot snapshot = fetcher_.Fetch(config);
             std::lock_guard<std::mutex> lock(mutex_);
+            fetchInProgress_ = false;
+            if (generation != configGeneration_) return;
             snapshot_ = std::move(snapshot);
             fiveHourItem_.SetSnapshot(snapshot_);
             weeklyItem_.SetSnapshot(snapshot_);
             tooltip_ = BuildTooltip(snapshot_);
-            fetchInProgress_ = false;
         }).detach();
+    }
+
+    OptionReturn ShowOptionsDialog(void* parent) override {
+        CodexUsageConfig config;
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            config = config_;
+        }
+        if (!ShowCodexOptions(reinterpret_cast<HWND>(parent), &config)) return OR_OPTION_UNCHANGED;
+        {
+            std::lock_guard<std::mutex> lock(mutex_);
+            config_ = std::move(config);
+            ++configGeneration_;
+            lastFetch_ = {};
+            snapshot_ = {};
+            fiveHourItem_.SetSnapshot(snapshot_);
+            weeklyItem_.SetSnapshot(snapshot_);
+            tooltip_ = L"Codex Usage: waiting for data";
+        }
+        DataRequired();
+        return OR_OPTION_CHANGED;
     }
 
     const wchar_t* GetInfo(PluginInfoIndex index) override {
@@ -129,6 +156,8 @@ private:
         return BuildUsageTooltip(snapshot);
     }
 
+    CodexUsageConfig config_ = LoadCodexConfig();
+    unsigned long long configGeneration_ = 0;
     CodexUsageFetcher fetcher_;
     CodexUsageItem fiveHourItem_{CodexUsageItem::Window::FiveHour, L"Codex 5h Remaining", L"CodexUsage5h", L"5\u5c0f\u65f6: "};
     CodexUsageItem weeklyItem_{CodexUsageItem::Window::Weekly, L"Codex Weekly Remaining", L"CodexUsageWeek", L"\u672c \u5468: "};
